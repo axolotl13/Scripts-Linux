@@ -24,15 +24,45 @@ connect_ssh() {
 }
 
 check_ssh() {
-  ssh_status=$(systemctl is-active sshd)
-  if [ "$ssh_status" == "active" ]; then
+  if [ "$(systemctl is-active sshd)" == "active" ]; then
     echo "SSH service is running."
-    connect_ssh
+    # connect_ssh
   else
     echo "SSH service is not running."
-    systemctl start sshd
-    connect_ssh
+    sudo systemctl enable sshd
+    sudo systemctl start sshd
+    # connect_ssh
   fi
 }
 
-check_ssh
+check_os() {
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$NAME
+  else
+    echo "No se pudo detectar la distribución de Linux"
+    exit 1
+  fi
+
+  if [ -z "$(which sudo)" ]; then
+    case $OS in
+    "Ubuntu" | "Debian GNU/Linux")
+      apt update && apt upgrade && apt install sudo -y
+      ;;
+    "Fedora")
+      dnf upgrade && dnf install sudo -y
+      ;;
+    "Arch Linux")
+      pacman -Syu && pacman -Sy sudo
+      ;;
+    *)
+      echo "No se reconoce la distribución $OS"
+      exit 1
+      ;;
+    esac
+  fi
+
+  check_ssh
+}
+
+check_os
