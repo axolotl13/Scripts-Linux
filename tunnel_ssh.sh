@@ -44,16 +44,16 @@ check_os() {
     exit 1
   fi
 
-  if [ -z "$(which sudo)" ]; then
+  if [ -z "$(which sudo)" ] && [ -z "$(which sshd)" ]; then
     case $OS in
     "Ubuntu" | "Debian GNU/Linux")
-      apt update && apt upgrade && apt install sudo -y
+      apt update && apt upgrade && apt install sudo openssh-server -y
       ;;
     "Fedora")
-      dnf upgrade && dnf install sudo -y
+      dnf upgrade && dnf install sudo openssh-server -y
       ;;
     "Arch Linux")
-      pacman -Syu && pacman -Sy sudo
+      pacman -Syu && pacman -Sy sudo openssh
       ;;
     *)
       echo "No se reconoce la distribución $OS"
