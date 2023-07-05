@@ -46,6 +46,8 @@ check_os() {
     fi
 
     if [[ ! $(ping -c 3 google.com) ]]; then
+        echo "No se pudo realizar la acción"
+    else
         if [ -z "$(which sshd)" ] || [ -z "$(which wget)" ]; then
             case $OS in
             "Ubuntu" | "Debian GNU/Linux")
