@@ -1,7 +1,7 @@
 #!/bin/bash
 
 create_file() {
-    file=/etc/systemd/user
+    file=/etc/systemd/system
     file_ssh=$file/tunnel.sh
     file_service=$file/tunnel.service
     mkdir -p $file
@@ -15,21 +15,23 @@ ExecStart=/bin/sh $file_ssh
 WantedBy=default.target" >$file_service
 
     sleep 3
-    systemctl --user daemon-reload
+    systemctl daemon-reload
     # if [ "$(systemctl --user is-enabled tunnel)" == "disabled" ]; then
-    systemctl --user enable tunnel
-    # sudo systemctl start tunnel
+    systemctl enable tunnel
+    # systemctl start tunnel
     # fi
 }
 
 check_ssh() {
-    if [ "$(systemctl is-active sshd)" == "active" ]; then
+    if [ "$(systemctl is-active sshd)" == "active" ] || [ "$(systemctl is-active ssh)" ]; then
         echo "SSH service is running."
         create_file
     else
         echo "SSH service is not running."
-        sudo systemctl enable sshd
-        sudo systemctl start sshd
+        systemctl enable ssh
+        systemctl enable sshd
+        systemctl start ssh
+        systemctl start sshd
         create_file
     fi
 }
@@ -43,25 +45,26 @@ check_os() {
         exit 1
     fi
 
-    if [ -z "$(which sudo)" ] || [ -z "$(which sshd)" ] || [ -z "$(which wget)" ]; then
-        case $OS in
-        "Ubuntu" | "Debian GNU/Linux")
-            apt update && apt upgrade && apt install sudo openssh-server wget -y
-            ;;
-        "Fedora")
-            dnf upgrade && dnf install sudo openssh-server wget -y
-            ;;
-        "Arch Linux")
-            pacman -Syu && pacman -Sy sudo openssh wget
-            ;;
-        *)
-            echo "No se reconoce la distribución $OS"
-            exit 1
-            ;;
-        esac
+    if [[ ! $(ping -c 3 google.com) ]]; then
+        if [ -z "$(which sshd)" ] || [ -z "$(which wget)" ]; then
+            case $OS in
+            "Ubuntu" | "Debian GNU/Linux")
+                apt update && apt upgrade && apt install openssh-server wget -y
+                ;;
+            "Fedora")
+                dnf upgrade && dnf install openssh-server wget -y
+                ;;
+            "Arch Linux")
+                pacman -Syu && pacman -Sy openssh wget
+                ;;
+            *)
+                echo "No se reconoce la distribución $OS"
+                exit 1
+                ;;
+            esac
+        fi
+        check_ssh
     fi
-
-    check_ssh
 }
 
 check_os
